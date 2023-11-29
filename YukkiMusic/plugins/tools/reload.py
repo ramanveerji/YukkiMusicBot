@@ -45,15 +45,15 @@ async def reload_admin_cache(client, message: Message, _):
         ):
             admins.append(m)
         authusers = await get_authuser_names(chat_id)
-        adminlist[chat_id] = []
-        for user in admins:
-            if user.privileges.can_manage_video_chats:
-                adminlist[chat_id].append(user.user.id)
+        adminlist[chat_id] = [
+            user.user.id
+            for user in admins
+            if user.privileges.can_manage_video_chats
+        ]
         for user in authusers:
             user_id = await alpha_to_int(user)
             adminlist[chat_id].append(user_id)
         await message.reply_text(_["admin_20"])
-    #except:
     except Exception as e:
         print(f"Error: {e}")
         await message.reply_text(
