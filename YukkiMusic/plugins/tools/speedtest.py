@@ -23,13 +23,24 @@ def testspeed(m):
     try:
         test = speedtest.Speedtest()
         test.get_best_server()
+        
+        # Running Download SpeedTest
         m = m.edit("Running Download SpeedTest")
-        test.download()
+        download_speed = test.download()
+        
+        # Running Upload SpeedTest
         m = m.edit("Running Upload SpeedTest")
-        test.upload()
+        upload_speed = test.upload()
+        
+        # Sharing SpeedTest Results
         test.results.share()
         result = test.results.dict()
         m = m.edit("Sharing SpeedTest Results")
+        
+        # Add upload and download speed to the result dictionary
+        result['download_speed'] = download_speed
+        result['upload_speed'] = upload_speed
+        
     except Exception as e:
         return m.edit(e)
     return result
@@ -40,21 +51,25 @@ async def speedtest_function(client, message):
     m = await message.reply_text("Running Speed test")
     loop = asyncio.get_event_loop()
     result = await loop.run_in_executor(None, testspeed, m)
+    
+    # Add upload and download speed to the output
     output = f"""**Speedtest Results**
     
-<u>**Client:**</u>
-**__ISP:__** {result['client']['isp']}
-**__Country:__** {result['client']['country']}
-  
+
 <u>**Server:**</u>
 **__Name:__** {result['server']['name']}
 **__Country:__** {result['server']['country']}, {result['server']['cc']}
 **__Sponsor:__** {result['server']['sponsor']}
 **__Latency:__** {result['server']['latency']}  
-**__Ping:__** {result['ping']}"""
-    msg = await app.send_photo(
+**__Ping:__** {result['ping']}
+  
+<u>**Speeds:**</u>
+**__Download Speed:__** {result['download_speed'] / 1024 / 1024:.2f} Mbps
+**__Upload Speed:__** {result['upload_speed'] / 1024 / 1024:.2f} Mbps"""
+
+    msg = await app.send_message(
         chat_id=message.chat.id, 
-        photo=result["share"], 
-        caption=output
+        text=output
     )
     await m.delete()
+
